@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Content-Security-Policy" content="img-src * data: blob:;">
+<title>DesignAI - AI Design Studio</title>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,sans-serif;background:#f5f4ff;color:#1a1a2e;min-height:100vh;}
+.header{background:linear-gradient(135deg,#7F77DD,#534AB7);color:#fff;padding:1.5rem;text-align:center;}
+.header h1{font-size:28px;font-weight:700;letter-spacing:-0.5px;}
+.header p{font-size:13px;opacity:0.8;margin-top:4px;}
+.container{max-width:700px;margin:0 auto;padding:1.5rem;}
+
+/* FREE TRIAL BANNER */
+.free-trial-bar{background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;padding:10px 16px;margin-bottom:1.25rem;font-size:13px;color:#2e7d32;display:flex;align-items:center;gap:8px;}
+.free-trial-bar strong{font-size:14px;}
+
+/* PAYWALL OVERLAY */
+#paywall-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(26,26,46,0.7);z-index:999;align-items:center;justify-content:center;padding:1rem;}
+#paywall-overlay.show{display:flex;}
+.paywall-box{background:#fff;border-radius:16px;padding:2rem;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;}
+.paywall-box h2{font-size:20px;font-weight:700;margin-bottom:6px;text-align:center;}
+.paywall-box .sub{font-size:13px;color:#888;text-align:center;margin-bottom:1.5rem;}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem;}
+.plan{border:2px solid #ddd;border-radius:12px;padding:1.25rem;background:#fff;cursor:pointer;text-align:center;transition:all 0.15s;}
+.plan.selected{border-color:#7F77DD;background:#faf9ff;}
+.plan-name{font-size:12px;color:#888;margin-bottom:4px;}
+.plan-price{font-size:26px;font-weight:700;color:#1a1a2e;}
+.plan-desc{font-size:12px;color:#aaa;margin-top:4px;}
+.plan-badge{font-size:10px;background:#EEEDFE;color:#534AB7;padding:2px 8px;border-radius:6px;display:inline-block;margin-bottom:6px;font-weight:600;}
+.flabel{display:block;font-size:13px;color:#555;margin-bottom:5px;font-weight:500;}
+.finput{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;font-size:14px;margin-bottom:1rem;outline:none;font-family:inherit;}
+.finput:focus{border-color:#7F77DD;}
+.pay-btn{width:100%;padding:13px;border-radius:8px;background:#7F77DD;color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.pay-btn:hover{background:#6560c8;}
+.pay-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.cancel-link{text-align:center;margin-top:10px;font-size:13px;color:#aaa;cursor:pointer;}
+.cancel-link:hover{color:#555;}
+.secure-note{text-align:center;font-size:12px;color:#aaa;margin-top:8px;}
+
+/* SUCCESS BANNER */
+#success-banner{display:none;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:14px;color:#2e7d32;}
+#success-banner strong{display:block;font-size:15px;margin-bottom:2px;}
+
+/* CREDITS BAR */
+.credits-bar{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #e8e6f5;border-radius:10px;padding:10px 16px;margin-bottom:1.25rem;font-size:13px;}
+.credits-count{font-weight:700;font-size:16px;}
+.credits-count.free{color:#2e7d32;}
+.credits-count.paid{color:#534AB7;}
+.buy-more{font-size:12px;color:#7F77DD;cursor:pointer;font-weight:600;text-decoration:underline;}
+
+/* APP */
+.tabs{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap;}
+.tab{padding:9px 18px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:13px;cursor:pointer;color:#555;transition:all 0.15s;}
+.tab.active{background:#7F77DD;color:#fff;border-color:#7F77DD;font-weight:500;}
+.tab:hover:not(.active){background:#f0f0ff;}
+.panel{display:none;}
+.panel.active{display:block;}
+.card{background:#fff;border-radius:12px;padding:1.5rem;border:1px solid #e8e6f5;margin-bottom:1rem;}
+.row{margin-bottom:1rem;}
+label{display:block;font-size:13px;color:#555;margin-bottom:5px;font-weight:500;}
+input,select,textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;font-size:14px;font-family:inherit;color:#1a1a2e;background:#fff;outline:none;transition:border 0.15s;}
+input:focus,select:focus,textarea:focus{border-color:#7F77DD;}
+textarea{min-height:80px;resize:vertical;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.btn{width:100%;padding:13px;border-radius:8px;background:#7F77DD;color:#fff;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;transition:all 0.15s;}
+.btn:hover{background:#6560c8;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
+.img-area{margin-top:1rem;border:1.5px dashed #ccc;border-radius:12px;overflow:hidden;min-height:220px;background:#faf9ff;display:flex;align-items:center;justify-content:center;}
+.img-area img{width:100%;display:block;border-radius:10px;}
+.placeholder{text-align:center;padding:2.5rem;color:#aaa;}
+.placeholder svg{margin:0 auto 12px;display:block;opacity:0.4;}
+.placeholder p{font-size:13px;}
+.spinner-box{text-align:center;padding:2.5rem;}
+.spinner{width:36px;height:36px;border:3px solid #e0defd;border-top-color:#7F77DD;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner-box p{font-size:13px;color:#888;line-height:1.6;}
+.action-row{display:flex;gap:8px;margin-top:10px;}
+.act-btn{flex:1;padding:9px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:13px;cursor:pointer;color:#444;transition:all 0.15s;font-weight:500;}
+.act-btn:hover{background:#f0f0ff;border-color:#7F77DD;color:#7F77DD;}
+.tip{font-size:12px;color:#888;margin-top:10px;padding:9px 12px;background:#f5f4ff;border-radius:8px;border-left:3px solid #7F77DD;}
+
+/* UPSELL NUDGE after free image */
+#upsell-nudge{display:none;background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;color:#b45309;}
+#upsell-nudge strong{display:block;font-size:14px;margin-bottom:2px;}
+#upsell-nudge .nudge-btn{margin-top:8px;padding:8px 18px;background:#7F77DD;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;}
+
+@media(max-width:500px){.g2,.plan-grid{grid-template-columns:1fr;}.tabs{gap:6px;}.tab{padding:7px 12px;font-size:12px;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>DesignAI</h1>
+  <p>Professional AI designs — social posts, logos &amp; banners in seconds</p>
+</div>
+
+<!-- ═══ PAYWALL OVERLAY (appears after free image used) ═══ -->
+<div id="paywall-overlay">
+  <div class="paywall-box">
+    <h2>You loved your free image! 🎨</h2>
+    <p class="sub">Get more images — choose a plan to continue</p>
+    <div class="plan-grid">
+      <div class="plan selected" id="plan-basic" onclick="selectPlan('basic',99,5)">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">&#8377;99</div>
+        <div class="plan-desc">5 images</div>
+      </div>
+      <div class="plan" id="plan-pro" onclick="selectPlan('pro',299,20)">
+        <div class="plan-badge">Best value</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">&#8377;299</div>
+        <div class="plan-desc">20 images</div>
+      </div>
+    </div>
+    <label class="flabel">Your name</label>
+    <input class="finput" type="text" id="cust-name" placeholder="Enter your full name"/>
+    <label class="flabel">Email (for confirmation)</label>
+    <input class="finput" type="email" id="cust-email" placeholder="Enter your email"/>
+    <label class="flabel">Mobile number</label>
+    <input class="finput" type="tel" id="cust-phone" placeholder="Enter your mobile number"/>
+    <button class="pay-btn" id="pay-btn" onclick="startPayment()">Pay &#8377;99 &amp; Get More Images</button>
+    <p class="secure-note">&#128274; Secure payment via Razorpay &middot; UPI &middot; Cards &middot; Net Banking</p>
+    <p class="cancel-link" onclick="closePaywall()">&#x2715; Continue with free image only</p>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP (visible from start) ═══ -->
+<div id="app">
+<div class="container">
+
+  <!-- Free trial notice -->
+  <div class="free-trial-bar" id="free-trial-bar">
+    <span style="font-size:18px;">&#127381;</span>
+    <div><strong>Your first image is FREE!</strong> Generate and download it — no payment needed.</div>
+  </div>
+
+  <!-- Upsell nudge after free image downloaded -->
+  <div id="upsell-nudge">
+    <strong>&#127881; You got your free image!</strong>
+    Want more? Get 5 images for just &#8377;99 or 20 images for &#8377;299.
+    <br/><button class="nudge-btn" onclick="openPaywall()">Unlock More Images</button>
+  </div>
+
+  <!-- Success banner after payment -->
+  <div id="success-banner">
+    <strong>Payment successful! Welcome back &#127881;</strong>
+    <span id="confirm-msg"></span>
+  </div>
+
+  <!-- Credits bar -->
+  <div class="credits-bar" id="credits-bar">
+    <span style="color:#555;font-size:13px;" id="credits-label">Free image available</span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="credits-count free" id="credits-display">1</span>
+      <span class="buy-more" id="buy-more-btn" onclick="openPaywall()" style="display:none;">Buy more</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('post',this)">Social Post</button>
+    <button class="tab" onclick="switchTab('logo',this)">Logo</button>
+    <button class="tab" onclick="switchTab('banner',this)">Banner</button>
+    <button class="tab" onclick="switchTab('custom',this)">Custom</button>
+  </div>
+
+  <!-- SOCIAL POST -->
+  <div class="panel active" id="panel-post">
+    <div class="card">
+      <div class="row"><label>Brand / Business name</label><input type="text" id="p-brand" placeholder="e.g. Glow Skin, Fresh Bakes, Nova Gym"/></div>
+      <div class="g2">
+        <div class="row"><label>Platform</label><select id="p-platform"><option>Instagram</option><option>Facebook</option><option>LinkedIn</option><option>Twitter/X</option></select></div>
+        <div class="row"><label>Visual style</label><select id="p-style"><option>Modern &amp; clean</option><option>Bold &amp; colorful</option><option>Luxury &amp; elegant</option><option>Playful &amp; fun</option><option>Minimal &amp; white</option></select></div>
+      </div>
+      <div class="row"><label>What to promote</label><textarea id="p-msg" placeholder="e.g. 50% sale this weekend, new product launch, festive offer..."></textarea></div>
+      <div class="row"><label>Color theme</label><select id="p-color"><option>Purple &amp; white</option><option>Blue &amp; gold</option><option>Green &amp; white</option><option>Red &amp; black</option><option>Pink &amp; cream</option><option>Orange &amp; white</option></select></div>
+      <button class="btn" id="post-btn" onclick="generateImage('post')">Generate Social Post Image</button>
+    </div>
+    <div class="img-area" id="post-img"><div class="placeholder"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><p>Your image appears here</p></div></div>
+    <div class="action-row" id="post-actions" style="display:none">
+      <button class="act-btn" onclick="downloadImg('post-img','social-post')">&#11015; Download</button>
+      <button class="act-btn" onclick="regenImage('post')">&#8635; Regenerate</button>
+    </div>
+    <p class="tip">Download and share directly on Instagram, Facebook or WhatsApp!</p>
+  </div>
+
+  <!-- LOGO -->
+  <div class="panel" id="panel-logo">
+    <div class="card">
+      <div class="row"><label>Business name</label><input type="text" id="l-brand" placeholder="e.g. Nova Tech, Bloom Cafe, Apex Fit"/></div>
+      <div class="g2">
+        <div class="row"><label>Industry</label><select id="l-industry"><option>Food &amp; cafe</option><option>Technology</option><option>Fashion &amp; beauty</option><option>Fitness &amp; health</option><option>Education</option><option>Finance</option><option>Real estate</option></select></div>
+        <div class="row"><label>Style</label><select id="l-style"><option>Modern &amp; minimal</option><option>Bold &amp; geometric</option><option>Elegant &amp; luxury</option><option>Playful &amp; colorful</option><option>Retro &amp; vintage</option><option>Tech &amp; futuristic</option></select></div>
+      </div>
+      <div class="row"><label>Color palette</label><select id="l-color"><option>Purple &amp; white</option><option>Blue &amp; silver</option><option>Green &amp; black</option><option>Gold &amp; black</option><option>Red &amp; white</option><option>Teal &amp; white</option></select></div>
+      <button class="btn" id="logo-btn" onclick="generateImage('logo')">Generate Logo Image</button>
+    </div>
+    <div class="img-area" id="logo-img"><div class="placeholder"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><p>Your logo appears here</p></div></div>
+    <div class="action-row" id="logo-actions" style="display:none">
+      <button class="act-btn" onclick="downloadImg('logo-img','logo')">&#11015; Download</button>
+      <button class="act-btn" onclick="regenImage('logo')">&#8635; Regenerate</button>
+    </div>
+    <p class="tip">Share logo with your client and charge &#8377;500&#8211;&#8377;2,000 per concept!</p>
+  </div>
+
+  <!-- BANNER -->
+  <div class="panel" id="panel-banner">
+    <div class="card">
+      <div class="row"><label>Brand / Campaign name</label><input type="text" id="b-brand" placeholder="e.g. MegaSale, Diwali Offer, New Launch"/></div>
+      <div class="g2">
+        <div class="row"><label>Banner type</label><select id="b-type"><option>Sale &amp; discount banner</option><option>Product launch banner</option><option>Event announcement</option><option>YouTube thumbnail</option><option>Website hero banner</option></select></div>
+        <div class="row"><label>Style</label><select id="b-style"><option>Bold &amp; eye-catching</option><option>Clean &amp; professional</option><option>Festive &amp; colorful</option><option>Luxury &amp; premium</option></select></div>
+      </div>
+      <div class="row"><label>Key message / offer</label><textarea id="b-msg" placeholder="e.g. 50% off everything, Free shipping above 500..."></textarea></div>
+      <button class="btn" id="banner-btn" onclick="generateImage('banner')">Generate Banner Image</button>
+    </div>
+    <div class="img-area" id="banner-img"><div class="placeholder"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8"/><path d="M12 3v4"/></svg><p>Your banner appears here</p></div></div>
+    <div class="action-row" id="banner-actions" style="display:none">
+      <button class="act-btn" onclick="downloadImg('banner-img','banner')">&#11015; Download</button>
+      <button class="act-btn" onclick="regenImage('banner')">&#8635; Regenerate</button>
+    </div>
+    <p class="tip">Sell banner designs to local shops for &#8377;300&#8211;&#8377;1,000 each!</p>
+  </div>
+
+  <!-- CUSTOM -->
+  <div class="panel" id="panel-custom">
+    <div class="card">
+      <div class="row"><label>Describe exactly what you want</label><textarea id="c-prompt" placeholder="e.g. A modern Instagram post for a bakery called Sweet Bites, pink and gold colors, 20% off today only..." style="min-height:120px;"></textarea></div>
+      <div class="g2">
+        <div class="row"><label>Image size</label><select id="c-size"><option value="1024x1024">Square &#8212; Instagram</option><option value="1792x1024">Wide &#8212; Banner/YouTube</option><option value="1024x1792">Tall &#8212; Story/Reel</option></select></div>
+        <div class="row"><label>Art style</label><select id="c-style"><option>Photorealistic</option><option>Digital illustration</option><option>Flat design</option><option>3D render</option><option>Minimalist</option></select></div>
+      </div>
+      <button class="btn" id="custom-btn" onclick="generateImage('custom')">Generate Custom Image</button>
+    </div>
+    <div class="img-area" id="custom-img"><div class="placeholder"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><p>Your custom image appears here</p></div></div>
+    <div class="action-row" id="custom-actions" style="display:none">
+      <button class="act-btn" onclick="downloadImg('custom-img','custom-design')">&#11015; Download</button>
+      <button class="act-btn" onclick="regenImage('custom')">&#8635; Regenerate</button>
+    </div>
+    <p class="tip">Use this for any unique client request &#8212; full creative control!</p>
+  </div>
+
+</div>
+</div>
+
+<script>
+// =============================================
+// YOUR SETTINGS — EDIT THESE 3 LINES
+// =============================================
+var RAZORPAY_KEY  = 'rzp_test_SRYyCrFNhCPdll'; // e.g. 'rzp_live_xxxxxxxx'
+var BUSINESS_NAME = 'DesignAI';
+var YOUR_EMAIL    = 'your@email.com';
+// =============================================
+
+var FREE_IMAGES   = 1;   // how many free images each visitor gets
+var selectedPlan  = {name:'basic', amount:99, credits:5};
+var customerCredits = 0;
+var freeUsed      = 0;   // how many free images used
+var isPaid        = false;
+var customerName  = '';
+var customerEmail = '';
+
+// ── On page load ──
+window.onload = function(){
+  var savedFree  = parseInt(sessionStorage.getItem('dai_free_used') || '0');
+  var savedPaid  = parseInt(sessionStorage.getItem('dai_credits') || '0');
+  freeUsed       = savedFree;
+  isPaid         = savedPaid > 0;
+  customerCredits= savedPaid;
+  customerName   = sessionStorage.getItem('dai_name') || '';
+  updateCreditsBar();
+};
+
+function updateCreditsBar(){
+  var display = document.getElementById('credits-display');
+  var label   = document.getElementById('credits-label');
+  var buyBtn  = document.getElementById('buy-more-btn');
+  var freeBar = document.getElementById('free-trial-bar');
+
+  if(isPaid){
+    display.textContent = customerCredits;
+    display.className   = 'credits-count paid';
+    label.textContent   = 'Images remaining';
+    buyBtn.style.display= customerCredits < 3 ? 'inline' : 'none';
+    freeBar.style.display = 'none';
+  } else {
+    var remaining = FREE_IMAGES - freeUsed;
+    display.textContent = remaining > 0 ? remaining : '0';
+    display.className   = 'credits-count free';
+    label.textContent   = remaining > 0 ? 'Free image available' : 'Free image used';
+    buyBtn.style.display= freeUsed >= FREE_IMAGES ? 'inline' : 'none';
+    freeBar.style.display = freeUsed >= FREE_IMAGES ? 'none' : 'flex';
+  }
+}
+
+// ── Check if can generate ──
+function canGenerate(){
+  if(isPaid && customerCredits > 0) return true;
+  if(!isPaid && freeUsed < FREE_IMAGES) return true;
+  return false;
+}
+
+// ── Consume one credit/free use ──
+function consumeCredit(){
+  if(isPaid){
+    customerCredits--;
+    sessionStorage.setItem('dai_credits', customerCredits);
+  } else {
+    freeUsed++;
+    sessionStorage.setItem('dai_free_used', freeUsed);
+  }
+  updateCreditsBar();
+}
+
+// ── Refund if generate cancelled ──
+function refundCredit(){
+  if(isPaid){
+    customerCredits++;
+    sessionStorage.setItem('dai_credits', customerCredits);
+  } else {
+    freeUsed--;
+    sessionStorage.setItem('dai_free_used', freeUsed);
+  }
+  updateCreditsBar();
+}
+
+// ── Open / close paywall ──
+function openPaywall(){
+  document.getElementById('paywall-overlay').classList.add('show');
+}
+function closePaywall(){
+  document.getElementById('paywall-overlay').classList.remove('show');
+}
+
+// ── Plan selection ──
+function selectPlan(name, amount, credits){
+  selectedPlan = {name:name, amount:amount, credits:credits};
+  document.querySelectorAll('.plan').forEach(function(p){p.classList.remove('selected');});
+  document.getElementById('plan-'+name).classList.add('selected');
+  document.getElementById('pay-btn').innerHTML = 'Pay &#8377;'+amount+' &amp; Get More Images';
+}
+
+// ── Start Razorpay payment ──
+function startPayment(){
+  var name  = document.getElementById('cust-name').value.trim();
+  var email = document.getElementById('cust-email').value.trim();
+  var phone = document.getElementById('cust-phone').value.trim();
+  if(!name){alert('Please enter your name.');return;}
+  if(!email||!email.includes('@')){alert('Please enter a valid email.');return;}
+  if(!phone||phone.length<10){alert('Please enter a valid mobile number.');return;}
+  customerName  = name;
+  customerEmail = email;
+  var btn = document.getElementById('pay-btn');
+  btn.disabled = true;
+  btn.textContent = 'Opening payment...';
+  var options = {
+    key: RAZORPAY_KEY,
+    amount: selectedPlan.amount * 100,
+    currency: 'INR',
+    name: BUSINESS_NAME,
+    description: selectedPlan.credits+' AI Design Images',
+    prefill: {name:name, email:email, contact:phone},
+    theme: {color:'#7F77DD'},
+    handler: function(response){
+      isPaid          = true;
+      customerCredits = selectedPlan.credits;
+      sessionStorage.setItem('dai_credits', customerCredits);
+      sessionStorage.setItem('dai_name', name);
+      closePaywall();
+      updateCreditsBar();
+      // Hide upsell nudge
+      document.getElementById('upsell-nudge').style.display = 'none';
+      // Show success banner
+      var b = document.getElementById('success-banner');
+      b.style.display = 'block';
+      document.getElementById('confirm-msg').textContent =
+        'Hi '+name+'! You have '+selectedPlan.credits+' images. Confirmation sent to '+email+' by Razorpay.';
+      setTimeout(function(){b.style.display='none';}, 9000);
+      btn.disabled = false;
+      btn.innerHTML = 'Pay &#8377;'+selectedPlan.amount+' &amp; Get More Images';
+    },
+    modal:{
+      ondismiss:function(){
+        btn.disabled = false;
+        btn.innerHTML = 'Pay &#8377;'+selectedPlan.amount+' &amp; Get More Images';
+      }
+    }
+  };
+  var rzp = new Razorpay(options);
+  rzp.on('payment.failed',function(){
+    alert('Payment failed. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = 'Pay &#8377;'+selectedPlan.amount+' &amp; Get More Images';
+  });
+  rzp.open();
+}
+
+// ── Tab switching ──
+function switchTab(id,el){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  el.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+}
+
+// ── Build prompt ──
+function buildPrompt(type){
+  if(type==='post'){
+    var brand=document.getElementById('p-brand').value||'My Business';
+    var platform=document.getElementById('p-platform').value;
+    var style=document.getElementById('p-style').value;
+    var msg=document.getElementById('p-msg').value||'special offer';
+    var color=document.getElementById('p-color').value;
+    return style+' '+platform+' social media post for brand '+brand+', '+msg+', color theme '+color+', professional marketing design, bold text overlay, high quality digital art, no watermark';
+  }
+  if(type==='logo'){
+    var brand=document.getElementById('l-brand').value||'My Brand';
+    var industry=document.getElementById('l-industry').value;
+    var style=document.getElementById('l-style').value;
+    var color=document.getElementById('l-color').value;
+    return style+' logo for '+brand+' in '+industry+', '+color+' colors, clean vector style, white background, professional brand identity, no watermark';
+  }
+  if(type==='banner'){
+    var brand=document.getElementById('b-brand').value||'My Brand';
+    var btype=document.getElementById('b-type').value;
+    var style=document.getElementById('b-style').value;
+    var msg=document.getElementById('b-msg').value||'special offer';
+    return style+' '+btype+' for '+brand+', message: '+msg+', professional marketing banner, bold typography, high quality, no watermark';
+  }
+  if(type==='custom'){
+    var prompt=document.getElementById('c-prompt').value||'professional design';
+    var astyle=document.getElementById('c-style').value;
+    return prompt+', '+astyle+' style, high quality, professional, no watermark';
+  }
+}
+
+function getSize(type){
+  if(type==='custom'){var s=document.getElementById('c-size').value;var p=s.split('x');return{w:p[0],h:p[1]};}
+  if(type==='banner') return{w:'1792',h:'1024'};
+  return{w:'1024',h:'1024'};
+}
+
+function showLoading(id){
+  document.getElementById(id).innerHTML='<div class="spinner-box"><div class="spinner"></div><p>Generating your image...<br>Please wait 15&#8211;30 seconds</p></div>';
+}
+
+function showError(id,msg){
+  document.getElementById(id).innerHTML='<div class="spinner-box"><p style="color:#c00;font-size:14px;">'+(msg||'Failed. Please try again.')+'</p></div>';
+}
+
+// ── Generate (uses a credit) ──
+function generateImage(type){
+  if(!canGenerate()){
+    openPaywall();
+    return;
+  }
+  consumeCredit();
+  runGenerate(type);
+}
+
+// ── Regenerate (FREE — does not use a credit) ──
+function regenImage(type){
+  runGenerate(type);
+}
+
+function runGenerate(type){
+  var btnId = type+'-btn';
+  var imgId = type+'-img';
+  var actId = type+'-actions';
+  var prompt = buildPrompt(type);
+  if(!prompt||prompt.trim().length<5){
+    alert('Please fill in the details first!');
+    refundCredit();
+    return;
+  }
+  var size = getSize(type);
+  document.getElementById(btnId).disabled = true;
+  document.getElementById(actId).style.display = 'none';
+  showLoading(imgId);
+  var seed = Math.floor(Math.random()*99999);
+  var url  = 'https://image.pollinations.ai/prompt/'+encodeURIComponent(prompt)+'?width='+size.w+'&height='+size.h+'&nologo=true&enhance=true&model=flux&seed='+seed;
+  var timer = setTimeout(function(){
+    showError(imgId,'Taking too long. Check your internet and try again.');
+    document.getElementById(btnId).disabled=false;
+  },35000);
+  var img = new Image();
+  img.onload = function(){
+    clearTimeout(timer);
+    document.getElementById(imgId).innerHTML='';
+    img.style.cssText='width:100%;display:block;border-radius:10px;';
+    document.getElementById(imgId).appendChild(img);
+    document.getElementById(actId).style.display='flex';
+    document.getElementById(btnId).disabled=false;
+  };
+  img.onerror = function(){
+    clearTimeout(timer);
+    var img2=new Image();
+    img2.onload=function(){
+      document.getElementById(imgId).innerHTML='';
+      img2.style.cssText='width:100%;display:block;border-radius:10px;';
+      document.getElementById(imgId).appendChild(img2);
+      document.getElementById(actId).style.display='flex';
+      document.getElementById(btnId).disabled=false;
+    };
+    img2.onerror=function(){
+      showError(imgId,'Could not generate. Check internet and try again. Works best on Vercel.');
+      document.getElementById(btnId).disabled=false;
+    };
+    img2.src=url+'&t='+Date.now();
+  };
+  img.src=url;
+}
+
+// ── Download (shows upsell after free download) ──
+function downloadImg(containerId, filename){
+  var img=document.getElementById(containerId).querySelector('img');
+  if(!img){alert('Please generate an image first!');return;}
+  var a=document.createElement('a');
+  a.href=img.src;
+  a.download=filename+'.jpg';
+  a.target='_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // Show upsell nudge after free download
+  if(!isPaid && freeUsed >= FREE_IMAGES){
+    document.getElementById('upsell-nudge').style.display='block';
+    updateCreditsBar();
+  }
+}
+</script>
+</body>
+</html>
