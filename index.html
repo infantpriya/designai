@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DesignAI - AI Design Studio</title>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,sans-serif;background:#f5f4ff;color:#1a1a2e;min-height:100vh;}
+.header{background:linear-gradient(135deg,#7F77DD,#534AB7);color:#fff;padding:1.5rem;text-align:center;}
+.header h1{font-size:28px;font-weight:700;letter-spacing:-0.5px;}
+.header p{font-size:13px;opacity:0.8;margin-top:4px;}
+.container{max-width:700px;margin:0 auto;padding:1.5rem;}
+.free-bar{background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;padding:10px 16px;margin-bottom:1.25rem;font-size:13px;color:#2e7d32;display:flex;align-items:center;gap:10px;}
+.free-bar strong{font-size:14px;}
+#paywall-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(26,26,46,0.75);z-index:999;align-items:center;justify-content:center;padding:1rem;}
+#paywall-overlay.show{display:flex;}
+.pw-box{background:#fff;border-radius:16px;padding:2rem;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;}
+.pw-box h2{font-size:20px;font-weight:700;margin-bottom:6px;text-align:center;}
+.pw-sub{font-size:13px;color:#888;text-align:center;margin-bottom:1.5rem;}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem;}
+.plan{border:2px solid #ddd;border-radius:12px;padding:1.25rem;background:#fff;cursor:pointer;text-align:center;transition:all 0.15s;}
+.plan.sel{border-color:#7F77DD;background:#faf9ff;}
+.plan-name{font-size:12px;color:#888;margin-bottom:4px;}
+.plan-price{font-size:26px;font-weight:700;color:#1a1a2e;}
+.plan-desc{font-size:12px;color:#aaa;margin-top:4px;}
+.plan-badge{font-size:10px;background:#EEEDFE;color:#534AB7;padding:2px 8px;border-radius:6px;display:inline-block;margin-bottom:6px;font-weight:600;}
+.fl{display:block;font-size:13px;color:#555;margin-bottom:5px;font-weight:500;margin-top:2px;}
+.fi{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;font-size:14px;margin-bottom:1rem;outline:none;font-family:inherit;}
+.fi:focus{border-color:#7F77DD;}
+.pay-btn{width:100%;padding:13px;border-radius:8px;background:#7F77DD;color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.pay-btn:hover{background:#6560c8;}
+.pay-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.cancel-lnk{text-align:center;margin-top:10px;font-size:13px;color:#aaa;cursor:pointer;}
+.sec-note{text-align:center;font-size:12px;color:#aaa;margin-top:8px;}
+#success-banner{display:none;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:14px;color:#2e7d32;}
+#success-banner strong{display:block;font-size:15px;margin-bottom:2px;}
+.cbar{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #e8e6f5;border-radius:10px;padding:10px 16px;margin-bottom:1.25rem;font-size:13px;}
+.cnum{font-weight:700;font-size:16px;}.cnum.free{color:#2e7d32;}.cnum.paid{color:#534AB7;}
+.buymore{font-size:12px;color:#7F77DD;cursor:pointer;font-weight:600;text-decoration:underline;}
+.tabs{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap;}
+.tab{padding:9px 18px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:13px;cursor:pointer;color:#555;transition:all 0.15s;}
+.tab.active{background:#7F77DD;color:#fff;border-color:#7F77DD;font-weight:500;}
+.tab:hover:not(.active){background:#f0f0ff;}
+.panel{display:none;}.panel.active{display:block;}
+.card{background:#fff;border-radius:12px;padding:1.5rem;border:1px solid #e8e6f5;margin-bottom:1rem;}
+.row{margin-bottom:1rem;}
+label{display:block;font-size:13px;color:#555;margin-bottom:5px;font-weight:500;}
+input,select,textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;font-size:14px;font-family:inherit;color:#1a1a2e;background:#fff;outline:none;transition:border 0.15s;}
+input:focus,select:focus,textarea:focus{border-color:#7F77DD;}
+textarea{min-height:80px;resize:vertical;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.btn{width:100%;padding:13px;border-radius:8px;background:#7F77DD;color:#fff;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;transition:all 0.15s;}
+.btn:hover{background:#6560c8;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
+.canvas-wrap{margin-top:1rem;border-radius:12px;overflow:hidden;background:#faf9ff;display:flex;align-items:center;justify-content:center;min-height:260px;border:1.5px dashed #ccc;}
+.canvas-wrap canvas{max-width:100%;border-radius:10px;display:block;}
+.ph{text-align:center;padding:2.5rem;color:#aaa;}
+.ph svg{margin:0 auto 12px;display:block;opacity:0.4;}
+.ph p{font-size:13px;}
+.arow{display:flex;gap:8px;margin-top:10px;}
+.abtn{flex:1;padding:9px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:13px;cursor:pointer;color:#444;transition:all 0.15s;font-weight:500;}
+.abtn:hover{background:#f0f0ff;border-color:#7F77DD;color:#7F77DD;}
+.tip{font-size:12px;color:#888;margin-top:10px;padding:9px 12px;background:#f5f4ff;border-radius:8px;border-left:3px solid #7F77DD;}
+#upsell{display:none;background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;color:#b45309;}
+#upsell strong{display:block;font-size:14px;margin-bottom:4px;}
+.ubtn{margin-top:8px;padding:8px 18px;background:#7F77DD;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;}
+@media(max-width:500px){.g2,.plan-grid{grid-template-columns:1fr;}.tabs{gap:6px;}.tab{padding:7px 12px;font-size:12px;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>DesignAI</h1>
+  <p>Professional AI designs — social posts, logos &amp; banners in seconds</p>
+</div>
+
+<div id="paywall-overlay">
+  <div class="pw-box">
+    <h2>You loved your free image! &#127912;</h2>
+    <p class="pw-sub">Get more images — choose a plan below</p>
+    <div class="plan-grid">
+      <div class="plan sel" id="plan-basic" onclick="selPlan('basic',99,5)">
+        <div class="plan-name">Starter</div><div class="plan-price">&#8377;99</div><div class="plan-desc">5 designs</div>
+      </div>
+      <div class="plan" id="plan-pro" onclick="selPlan('pro',299,20)">
+        <div class="plan-badge">Best value</div><div class="plan-name">Pro</div><div class="plan-price">&#8377;299</div><div class="plan-desc">20 designs</div>
+      </div>
+    </div>
+    <label class="fl">Your name</label><input class="fi" type="text" id="cust-name" placeholder="Enter your full name"/>
+    <label class="fl">Email address</label><input class="fi" type="email" id="cust-email" placeholder="Enter your email"/>
+    <label class="fl">Mobile number</label><input class="fi" type="tel" id="cust-phone" placeholder="Enter your 10-digit mobile number"/>
+    <button class="pay-btn" id="pay-btn" onclick="startPayment()">Pay &#8377;99 &amp; Get More Designs</button>
+    <p class="sec-note">&#128274; Razorpay &middot; UPI &middot; Cards &middot; Net Banking</p>
+    <p class="cancel-lnk" onclick="closePW()">&#x2715; Maybe later</p>
+  </div>
+</div>
+
+<div id="app">
+<div class="container">
+
+  <div class="free-bar" id="free-bar">
+    <span style="font-size:20px;">&#127881;</span>
+    <div><strong>Your first design is FREE!</strong> Fill the form and generate — no payment needed.</div>
+  </div>
+
+  <div id="upsell">
+    <strong>&#127881; You got your free design!</strong> Want more? Get 5 designs for &#8377;99 or 20 for &#8377;299.
+    <br/><button class="ubtn" onclick="openPW()">Unlock More Designs</button>
+  </div>
+
+  <div id="success-banner"><strong>Payment successful! &#127881;</strong><span id="conf-msg"></span></div>
+
+  <div class="cbar">
+    <span style="color:#555;font-size:13px;" id="clbl">Free design available</span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="cnum free" id="cnum">1</span>
+      <span class="buymore" id="buybtn" onclick="openPW()" style="display:none;">Buy more</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('post',this)">Social Post</button>
+    <button class="tab" onclick="switchTab('logo',this)">Logo</button>
+    <button class="tab" onclick="switchTab('banner',this)">Banner</button>
+    <button class="tab" onclick="switchTab('custom',this)">Custom</button>
+  </div>
+
+  <!-- SOCIAL POST -->
+  <div class="panel active" id="panel-post">
+    <div class="card">
+      <div class="row"><label>Brand / Business name</label><input type="text" id="p-brand" placeholder="e.g. Glow Skin, Fresh Bakes, Nova Gym"/></div>
+      <div class="g2">
+        <div class="row"><label>Platform</label><select id="p-platform"><option>Instagram</option><option>Facebook</option><option>LinkedIn</option><option>Twitter</option></select></div>
+        <div class="row"><label>Style</label><select id="p-style"><option>Modern</option><option>Bold</option><option>Luxury</option><option>Playful</option><option>Minimal</option></select></div>
+      </div>
+      <div class="row"><label>What to promote</label><textarea id="p-msg" placeholder="e.g. 50% sale this weekend, New product launch, Grand opening..."></textarea></div>
+      <div class="row"><label>Color theme</label><select id="p-color">
+        <option value="purple">Purple &amp; White</option>
+        <option value="blue">Blue &amp; Gold</option>
+        <option value="green">Green &amp; White</option>
+        <option value="red">Red &amp; Black</option>
+        <option value="pink">Pink &amp; Cream</option>
+        <option value="orange">Orange &amp; White</option>
+        <option value="dark">Dark &amp; Neon</option>
+        <option value="teal">Teal &amp; White</option>
+      </select></div>
+      <button class="btn" id="post-btn" onclick="generate('post')">&#127912; Generate Social Post Design</button>
+    </div>
+    <div class="canvas-wrap" id="post-wrap"><div class="ph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><p>Your design appears here</p></div></div>
+    <div class="arow" id="post-act" style="display:none">
+      <button class="abtn" onclick="dlCanvas('post-canvas','social-post')">&#11015; Download Free</button>
+      <button class="abtn" onclick="generate('post')">&#8635; Regenerate</button>
+    </div>
+    <p class="tip">Download and share directly on Instagram, Facebook or WhatsApp!</p>
+  </div>
+
+  <!-- LOGO -->
+  <div class="panel" id="panel-logo">
+    <div class="card">
+      <div class="row"><label>Business name</label><input type="text" id="l-brand" placeholder="e.g. Nova Tech, Bloom Cafe, Apex Fit"/></div>
+      <div class="row"><label>Tagline (optional)</label><input type="text" id="l-tag" placeholder="e.g. Quality You Can Trust, Fresh Every Day"/></div>
+      <div class="g2">
+        <div class="row"><label>Style</label><select id="l-style"><option>Modern</option><option>Bold</option><option>Elegant</option><option>Playful</option><option>Tech</option></select></div>
+        <div class="row"><label>Color</label><select id="l-color">
+          <option value="purple">Purple</option><option value="blue">Blue</option>
+          <option value="green">Green</option><option value="red">Red</option>
+          <option value="orange">Orange</option><option value="teal">Teal</option>
+          <option value="dark">Dark</option><option value="pink">Pink</option>
+        </select></div>
+      </div>
+      <button class="btn" id="logo-btn" onclick="generate('logo')">&#127912; Generate Logo Design</button>
+    </div>
+    <div class="canvas-wrap" id="logo-wrap"><div class="ph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><p>Your logo appears here</p></div></div>
+    <div class="arow" id="logo-act" style="display:none">
+      <button class="abtn" onclick="dlCanvas('logo-canvas','logo')">&#11015; Download Free</button>
+      <button class="abtn" onclick="generate('logo')">&#8635; Regenerate</button>
+    </div>
+    <p class="tip">Share with your client and charge &#8377;500 to &#8377;2,000 per logo!</p>
+  </div>
+
+  <!-- BANNER -->
+  <div class="panel" id="panel-banner">
+    <div class="card">
+      <div class="row"><label>Brand / Campaign name</label><input type="text" id="b-brand" placeholder="e.g. MegaSale, Diwali Offer, Grand Opening"/></div>
+      <div class="row"><label>Main offer / headline</label><input type="text" id="b-headline" placeholder="e.g. 50% OFF, Buy 1 Get 1 Free, Grand Opening"/></div>
+      <div class="g2">
+        <div class="row"><label>Sub text</label><input type="text" id="b-sub" placeholder="e.g. This weekend only!"/></div>
+        <div class="row"><label>Color theme</label><select id="b-color">
+          <option value="red">Red &amp; Black</option><option value="purple">Purple &amp; White</option>
+          <option value="orange">Orange &amp; White</option><option value="blue">Blue &amp; Gold</option>
+          <option value="green">Green &amp; White</option><option value="dark">Dark &amp; Neon</option>
+        </select></div>
+      </div>
+      <div class="row"><label>Call to action</label><input type="text" id="b-cta" placeholder="e.g. Shop Now, Call Us, Visit Today, Order Online"/></div>
+      <button class="btn" id="banner-btn" onclick="generate('banner')">&#127912; Generate Banner Design</button>
+    </div>
+    <div class="canvas-wrap" id="banner-wrap"><div class="ph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8"/><path d="M12 3v4"/></svg><p>Your banner appears here</p></div></div>
+    <div class="arow" id="banner-act" style="display:none">
+      <button class="abtn" onclick="dlCanvas('banner-canvas','banner')">&#11015; Download Free</button>
+      <button class="abtn" onclick="generate('banner')">&#8635; Regenerate</button>
+    </div>
+    <p class="tip">Sell banner designs to local shops for &#8377;300 to &#8377;1,000 each!</p>
+  </div>
+
+  <!-- CUSTOM -->
+  <div class="panel" id="panel-custom">
+    <div class="card">
+      <div class="row"><label>Main title / brand name</label><input type="text" id="c-title" placeholder="e.g. Sweet Bites Bakery, Fitness Zone"/></div>
+      <div class="row"><label>Main message</label><textarea id="c-msg" placeholder="e.g. 20% off all cakes today only, Free trial this week, New collection arrived"></textarea></div>
+      <div class="g2">
+        <div class="row"><label>Design type</label><select id="c-type"><option value="post">Social Post</option><option value="logo">Logo Card</option><option value="banner">Banner</option></select></div>
+        <div class="row"><label>Color theme</label><select id="c-color">
+          <option value="purple">Purple</option><option value="blue">Blue &amp; Gold</option>
+          <option value="red">Red &amp; Black</option><option value="green">Green</option>
+          <option value="orange">Orange</option><option value="dark">Dark &amp; Neon</option>
+          <option value="pink">Pink</option><option value="teal">Teal</option>
+        </select></div>
+      </div>
+      <div class="row"><label>Extra line (optional)</label><input type="text" id="c-extra" placeholder="e.g. Call: 9876543210, Visit us at MG Road"/></div>
+      <button class="btn" id="custom-btn" onclick="generate('custom')">&#127912; Generate Custom Design</button>
+    </div>
+    <div class="canvas-wrap" id="custom-wrap"><div class="ph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><p>Your custom design appears here</p></div></div>
+    <div class="arow" id="custom-act" style="display:none">
+      <button class="abtn" onclick="dlCanvas('custom-canvas','custom-design')">&#11015; Download Free</button>
+      <button class="abtn" onclick="generate('custom')">&#8635; Regenerate</button>
+    </div>
+    <p class="tip">Use this for any unique client request!</p>
+  </div>
+
+</div>
+</div>
+
+<script>
+var RAZORPAY_KEY='rzp_live_SSz0gu8KEfspT7';
+var BUSINESS_NAME='DesignAI';
+var FREE_IMAGES=1;
+var selPlanData={name:'basic',amount:99,credits:5};
+var credits=0,freeUsed=0,isPaid=false,custName='',custEmail='';
+
+window.onload=function(){
+  freeUsed=parseInt(sessionStorage.getItem('df')||'0');
+  credits=parseInt(sessionStorage.getItem('dc')||'0');
+  isPaid=credits>0;custName=sessionStorage.getItem('dn')||'';
+  updateBar();
+};
+
+function updateBar(){
+  var d=document.getElementById('cnum'),l=document.getElementById('clbl'),b=document.getElementById('buybtn'),f=document.getElementById('free-bar');
+  if(isPaid){d.textContent=credits;d.className='cnum paid';l.textContent='Designs remaining';b.style.display=credits<3?'inline':'none';f.style.display='none';}
+  else{var r=FREE_IMAGES-freeUsed;d.textContent=r>0?r:'0';d.className='cnum free';l.textContent=r>0?'Free design available':'Free design used';b.style.display=freeUsed>=FREE_IMAGES?'inline':'none';f.style.display=freeUsed>=FREE_IMAGES?'none':'flex';}
+}
+
+function canGen(){return(isPaid&&credits>0)||(!isPaid&&freeUsed<FREE_IMAGES);}
+function useCredit(){if(isPaid){credits--;sessionStorage.setItem('dc',credits);}else{freeUsed++;sessionStorage.setItem('df',freeUsed);}updateBar();}
+function giveBack(){if(isPaid){credits++;sessionStorage.setItem('dc',credits);}else{freeUsed--;sessionStorage.setItem('df',freeUsed);}updateBar();}
+function openPW(){document.getElementById('paywall-overlay').classList.add('show');}
+function closePW(){document.getElementById('paywall-overlay').classList.remove('show');}
+
+function selPlan(n,a,c){
+  selPlanData={name:n,amount:a,credits:c};
+  document.querySelectorAll('.plan').forEach(function(p){p.classList.remove('sel');});
+  document.getElementById('plan-'+n).classList.add('sel');
+  document.getElementById('pay-btn').innerHTML='Pay &#8377;'+a+' &amp; Get More Designs';
+}
+
+function startPayment(){
+  var nm=document.getElementById('cust-name').value.trim();
+  var em=document.getElementById('cust-email').value.trim();
+  var ph=document.getElementById('cust-phone').value.trim();
+  if(!nm){alert('Please enter your name.');return;}
+  if(!em||!em.includes('@')){alert('Please enter a valid email.');return;}
+  if(!ph||ph.length<10){alert('Please enter a valid mobile number.');return;}
+  custName=nm;custEmail=em;
+  var btn=document.getElementById('pay-btn');
+  btn.disabled=true;btn.textContent='Opening payment...';
+  var rzp=new Razorpay({
+    key:RAZORPAY_KEY,amount:selPlanData.amount*100,currency:'INR',
+    name:BUSINESS_NAME,description:selPlanData.credits+' AI Designs',
+    prefill:{name:nm,email:em,contact:ph},theme:{color:'#7F77DD'},
+    handler:function(){
+      isPaid=true;credits=selPlanData.credits;
+      sessionStorage.setItem('dc',credits);sessionStorage.setItem('dn',nm);
+      closePW();updateBar();
+      document.getElementById('upsell').style.display='none';
+      var b=document.getElementById('success-banner');b.style.display='block';
+      document.getElementById('conf-msg').textContent=' Hi '+nm+'! You have '+selPlanData.credits+' designs. Confirmation sent to '+em+'.';
+      setTimeout(function(){b.style.display='none';},9000);
+      btn.disabled=false;btn.innerHTML='Pay &#8377;'+selPlanData.amount+' &amp; Get More Designs';
+    },
+    modal:{ondismiss:function(){btn.disabled=false;btn.innerHTML='Pay &#8377;'+selPlanData.amount+' &amp; Get More Designs';}}
+  });
+  rzp.on('payment.failed',function(){alert('Payment failed. Please try again.');btn.disabled=false;btn.innerHTML='Pay &#8377;'+selPlanData.amount+' &amp; Get More Designs';});
+  rzp.open();
+}
+
+function switchTab(id,el){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  el.classList.add('active');document.getElementById('panel-'+id).classList.add('active');
+}
+
+// ═══ COLOR PALETTES ═══
+var PALETTES={
+  purple:{bg1:'#7F77DD',bg2:'#534AB7',accent:'#FFD700',text:'#FFFFFF',sub:'#E8E6FF',dark:'#2D1B69'},
+  blue:{bg1:'#1565C0',bg2:'#0D47A1',accent:'#FFD700',text:'#FFFFFF',sub:'#BBDEFB',dark:'#0A2744'},
+  green:{bg1:'#2E7D32',bg2:'#1B5E20',accent:'#FFD700',text:'#FFFFFF',sub:'#C8E6C9',dark:'#0A2E0C'},
+  red:{bg1:'#C62828',bg2:'#1A1A1A',accent:'#FF6B6B',text:'#FFFFFF',sub:'#FFCDD2',dark:'#1A0000'},
+  pink:{bg1:'#C2185B',bg2:'#880E4F',accent:'#FFD700',text:'#FFFFFF',sub:'#FCE4EC',dark:'#3D0022'},
+  orange:{bg1:'#E65100',bg2:'#BF360C',accent:'#FFD700',text:'#FFFFFF',sub:'#FFE0B2',dark:'#3E1000'},
+  dark:{bg1:'#1A1A2E',bg2:'#16213E',accent:'#00FF88',text:'#FFFFFF',sub:'#00FF88',dark:'#0A0A1A'},
+  teal:{bg1:'#00695C',bg2:'#004D40',accent:'#FFD700',text:'#FFFFFF',sub:'#B2DFDB',dark:'#001A16'}
+};
+
+function getPal(col){return PALETTES[col]||PALETTES.purple;}
+
+function wrapText(ctx,text,x,y,maxW,lineH){
+  var words=text.split(' '),line='',lines=[];
+  for(var i=0;i<words.length;i++){var test=line+words[i]+' ';if(ctx.measureText(test).width>maxW&&i>0){lines.push(line.trim());line=words[i]+' ';}else{line=test;}}
+  lines.push(line.trim());
+  for(var j=0;j<lines.length;j++){ctx.fillText(lines[j],x,y+j*lineH);}
+  return lines.length;
+}
+
+function roundRect(ctx,x,y,w,h,r,fill,stroke){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
+}
+
+// ═══ DRAW SOCIAL POST ═══
+function drawPost(canvas,data){
+  var W=1080,H=1080;canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+  var p=getPal(data.color);
+  var variant=data.variant||0;
+
+  if(variant===0){
+    // Gradient bg
+    var grd=ctx.createLinearGradient(0,0,W,H);grd.addColorStop(0,p.bg1);grd.addColorStop(1,p.dark);
+    ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+    // Decorative circles
+    ctx.globalAlpha=0.12;ctx.fillStyle=p.accent;ctx.beginPath();ctx.arc(W-120,120,220,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(120,H-120,160,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+    // Top accent bar
+    ctx.fillStyle=p.accent;ctx.fillRect(80,80,8,120);
+    // Brand name
+    ctx.fillStyle=p.accent;ctx.font='bold 52px system-ui';ctx.fillText(data.brand.toUpperCase(),110,150);
+    // Main message
+    ctx.fillStyle=p.text;ctx.font='bold 86px system-ui';
+    var msgLines=data.msg.split('\n')[0];
+    var words=msgLines.split(' ');var lines=[];var line='';
+    for(var i=0;i<words.length;i++){var t=line+words[i]+' ';if(ctx.measureText(t).width>860&&line!=''){lines.push(line.trim());line=words[i]+' ';}else line=t;}lines.push(line.trim());
+    var startY=320;
+    for(var j=0;j<Math.min(lines.length,4);j++){ctx.fillText(lines[j],80,startY+j*100);}
+    // Divider
+    ctx.fillStyle=p.accent;ctx.fillRect(80,startY+Math.min(lines.length,4)*100+20,200,5);
+    // Platform badge
+    roundRect(ctx,80,H-200,280,70,35,p.accent,null);
+    ctx.fillStyle=p.dark;ctx.font='bold 30px system-ui';ctx.fillText(data.platform+' Post',110,H-155);
+    // Decorative pattern
+    ctx.globalAlpha=0.06;for(var k=0;k<8;k++){ctx.fillStyle=p.text;ctx.beginPath();ctx.arc(W-60-k*60,H-60,20,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
+  } else if(variant===1){
+    // White card style
+    ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W,H);
+    // Top colored header
+    var grd2=ctx.createLinearGradient(0,0,W,0);grd2.addColorStop(0,p.bg1);grd2.addColorStop(1,p.bg2);
+    ctx.fillStyle=grd2;ctx.fillRect(0,0,W,400);
+    // Brand
+    ctx.fillStyle='#FFFFFF';ctx.font='bold 56px system-ui';ctx.textAlign='center';ctx.fillText(data.brand.toUpperCase(),W/2,200);
+    ctx.font='28px system-ui';ctx.fillText(data.platform+' • Design by DesignAI',W/2,260);
+    // Message box
+    roundRect(ctx,80,360,W-160,320,20,'#FFFFFF',null);
+    ctx.shadowColor='rgba(0,0,0,0.1)';ctx.shadowBlur=30;ctx.fillStyle='#FFFFFF';ctx.fillRect(80,360,W-160,320);ctx.shadowBlur=0;
+    ctx.fillStyle=p.bg1;ctx.font='bold 72px system-ui';ctx.textAlign='center';
+    wrapText(ctx,data.msg,W/2,480,860,85);
+    // Bottom
+    ctx.fillStyle=p.bg1;ctx.font='bold 36px system-ui';ctx.textAlign='center';ctx.fillText('✦ '+data.brand+' ✦',W/2,H-80);
+    ctx.textAlign='left';
+  } else {
+    // Dark minimal
+    ctx.fillStyle=p.dark;ctx.fillRect(0,0,W,H);
+    for(var r=0;r<3;r++){ctx.strokeStyle=p.bg1;ctx.globalAlpha=0.2-r*0.05;ctx.lineWidth=2;ctx.strokeRect(40+r*30,40+r*30,W-80-r*60,H-80-r*60);}ctx.globalAlpha=1;
+    ctx.fillStyle=p.accent;ctx.font='bold 44px system-ui';ctx.textAlign='center';ctx.fillText(data.brand.toUpperCase(),W/2,160);
+    ctx.fillStyle=p.text;ctx.font='bold 90px system-ui';
+    var dy=320;var dwords=data.msg.split(' ');var dl='';var dls=[];
+    for(var di=0;di<dwords.length;di++){var dt=dl+dwords[di]+' ';if(ctx.measureText(dt).width>800&&dl!=''){dls.push(dl.trim());dl=dwords[di]+' ';}else dl=dt;}dls.push(dl.trim());
+    for(var dj=0;dj<Math.min(dls.length,4);dj++){ctx.fillText(dls[dj],W/2,dy+dj*105);}
+    ctx.fillStyle=p.accent;ctx.font='bold 34px system-ui';ctx.fillText('▶ '+data.platform+' Post',W/2,H-100);
+    ctx.textAlign='left';
+  }
+}
+
+// ═══ DRAW LOGO ═══
+function drawLogo(canvas,data){
+  var W=1080,H=1080;canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+  var p=getPal(data.color);
+  var v=data.variant||0;
+
+  ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W,H);
+
+  if(v===0){
+    // Circle emblem style
+    var cx=W/2,cy=H/2-80;
+    // Outer ring
+    ctx.beginPath();ctx.arc(cx,cy,300,0,Math.PI*2);ctx.fillStyle=p.bg1;ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,260,0,Math.PI*2);ctx.fillStyle='#FFFFFF';ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,230,0,Math.PI*2);ctx.fillStyle=p.bg2;ctx.fill();
+    // Initials
+    var init=data.brand.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+    ctx.fillStyle='#FFFFFF';ctx.font='bold 180px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(init,cx,cy);
+    // Brand name
+    ctx.textBaseline='alphabetic';ctx.fillStyle=p.bg1;ctx.font='bold 72px system-ui';ctx.fillText(data.brand.toUpperCase(),cx,cy+380);
+    // Tagline
+    if(data.tag){ctx.fillStyle='#888';ctx.font='32px system-ui';ctx.fillText(data.tag,cx,cy+445);}
+    // Underline
+    ctx.fillStyle=p.accent;ctx.fillRect(cx-120,cy+395,240,5);
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  } else if(v===1){
+    // Badge / shield style
+    ctx.fillStyle='#F8F8FF';ctx.fillRect(0,0,W,H);
+    // Badge shape
+    var bx=W/2,by=420;
+    ctx.beginPath();ctx.moveTo(bx,by-300);ctx.lineTo(bx+240,by-180);ctx.lineTo(bx+240,by+80);ctx.lineTo(bx,by+220);ctx.lineTo(bx-240,by+80);ctx.lineTo(bx-240,by-180);ctx.closePath();
+    ctx.fillStyle=p.bg1;ctx.fill();
+    ctx.beginPath();ctx.moveTo(bx,by-260);ctx.lineTo(bx+200,by-150);ctx.lineTo(bx+200,by+60);ctx.lineTo(bx,by+190);ctx.lineTo(bx-200,by+60);ctx.lineTo(bx-200,by-150);ctx.closePath();
+    ctx.fillStyle=p.bg2;ctx.fill();
+    var init2=data.brand.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+    ctx.fillStyle='#FFFFFF';ctx.font='bold 150px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(init2,bx,by);
+    ctx.textBaseline='alphabetic';
+    ctx.fillStyle=p.bg1;ctx.font='bold 60px system-ui';ctx.textAlign='center';ctx.fillText(data.brand.toUpperCase(),bx,by+380);
+    if(data.tag){ctx.fillStyle='#888';ctx.font='30px system-ui';ctx.fillText(data.tag,bx,by+440);}
+    ctx.textAlign='left';
+  } else {
+    // Wordmark style
+    ctx.fillStyle='#F8F8FF';ctx.fillRect(0,0,W,H);
+    roundRect(ctx,80,380,W-160,260,20,p.bg1,null);
+    ctx.fillStyle='#FFFFFF';ctx.font='bold 110px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(data.brand,W/2,510);ctx.textBaseline='alphabetic';
+    if(data.tag){ctx.fillStyle=p.bg1;ctx.font='bold 38px system-ui';ctx.fillText(data.tag,W/2,720);}
+    var init3=data.brand[0].toUpperCase();
+    roundRect(ctx,W/2-50,180,100,100,50,p.accent,null);
+    ctx.fillStyle=p.dark;ctx.font='bold 60px system-ui';ctx.textBaseline='middle';ctx.fillText(init3,W/2,232);
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  }
+}
+
+// ═══ DRAW BANNER ═══
+function drawBanner(canvas,data){
+  var W=1280,H=640;canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+  var p=getPal(data.color);
+
+  // Background
+  var grd=ctx.createLinearGradient(0,0,W,H);grd.addColorStop(0,p.dark);grd.addColorStop(0.5,p.bg1);grd.addColorStop(1,p.dark);
+  ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+
+  // Side decorations
+  ctx.globalAlpha=0.15;ctx.fillStyle=p.accent;ctx.beginPath();ctx.arc(0,H/2,280,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(W,H/2,280,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+
+  // Brand name
+  ctx.fillStyle=p.accent;ctx.font='bold 42px system-ui';ctx.textAlign='center';ctx.fillText(data.brand.toUpperCase(),W/2,90);
+
+  // Headline - big
+  ctx.fillStyle='#FFFFFF';ctx.font='bold 120px system-ui';ctx.textAlign='center';ctx.fillText(data.headline,W/2,290);
+
+  // Sub text pill
+  if(data.sub){
+    var sw=ctx.measureText(data.sub).width+80;
+    roundRect(ctx,W/2-sw/2,320,sw,60,30,p.accent,null);
+    ctx.fillStyle=p.dark;ctx.font='bold 32px system-ui';ctx.textAlign='center';ctx.fillText(data.sub,W/2,362);
+  }
+
+  // CTA button
+  if(data.cta){
+    var cw=ctx.measureText(data.cta).width+100;
+    roundRect(ctx,W/2-cw/2,450,cw,80,40,'#FFFFFF',null);
+    ctx.fillStyle=p.bg1;ctx.font='bold 36px system-ui';ctx.textAlign='center';ctx.fillText(data.cta,W/2,503);
+  }
+
+  // Corner accents
+  ctx.strokeStyle=p.accent;ctx.lineWidth=3;ctx.globalAlpha=0.5;
+  ctx.strokeRect(20,20,120,120);ctx.strokeRect(W-140,20,120,120);
+  ctx.strokeRect(20,H-140,120,120);ctx.strokeRect(W-140,H-140,120,120);
+  ctx.globalAlpha=1;ctx.textAlign='left';
+}
+
+// ═══ MAIN GENERATE FUNCTION ═══
+function generate(type){
+  if(!canGen()){openPW();return;}
+  useCredit();
+
+  var wrapId=type+'-wrap',actId=type+'-act',btnId=type+'-btn';
+  var variant=Math.floor(Math.random()*3);
+
+  try{
+    var canvas=document.createElement('canvas');
+    canvas.id=type+'-canvas';
+
+    if(type==='post'){
+      var brand=document.getElementById('p-brand').value||'My Brand';
+      var msg=document.getElementById('p-msg').value||'Special Offer';
+      var platform=document.getElementById('p-platform').value;
+      var color=document.getElementById('p-color').value;
+      if(!brand&&!msg){alert('Please fill brand name and message!');giveBack();return;}
+      drawPost(canvas,{brand:brand,msg:msg,platform:platform,color:color,variant:variant});
+    } else if(type==='logo'){
+      var brand=document.getElementById('l-brand').value||'My Brand';
+      var tag=document.getElementById('l-tag').value||'';
+      var color=document.getElementById('l-color').value;
+      if(!brand){alert('Please enter a business name!');giveBack();return;}
+      drawLogo(canvas,{brand:brand,tag:tag,color:color,variant:variant});
+    } else if(type==='banner'){
+      var brand=document.getElementById('b-brand').value||'My Brand';
+      var headline=document.getElementById('b-headline').value||'BIG SALE';
+      var sub=document.getElementById('b-sub').value||'';
+      var cta=document.getElementById('b-cta').value||'Shop Now';
+      var color=document.getElementById('b-color').value;
+      if(!brand&&!headline){alert('Please fill brand name and headline!');giveBack();return;}
+      drawBanner(canvas,{brand:brand,headline:headline,sub:sub,cta:cta,color:color});
+    } else if(type==='custom'){
+      var title=document.getElementById('c-title').value||'My Brand';
+      var msg=document.getElementById('c-msg').value||'Special Offer';
+      var ctype=document.getElementById('c-type').value;
+      var color=document.getElementById('c-color').value;
+      var extra=document.getElementById('c-extra').value||'';
+      if(!title&&!msg){alert('Please fill in the details!');giveBack();return;}
+      if(ctype==='post') drawPost(canvas,{brand:title,msg:msg,platform:'Social',color:color,variant:variant});
+      else if(ctype==='logo') drawLogo(canvas,{brand:title,tag:extra||msg,color:color,variant:variant});
+      else drawBanner(canvas,{brand:title,headline:msg,sub:extra,cta:'Contact Us',color:color});
+    }
+
+    var wrap=document.getElementById(wrapId);
+    wrap.innerHTML='';wrap.appendChild(canvas);
+    document.getElementById(actId).style.display='flex';
+    document.getElementById(btnId).disabled=false;
+
+  } catch(e){
+    console.error(e);
+    alert('Something went wrong. Please try again.');
+    giveBack();
+    document.getElementById(btnId).disabled=false;
+  }
+}
+
+function dlCanvas(canvasId,filename){
+  var canvas=document.getElementById(canvasId);
+  if(!canvas){alert('Please generate a design first!');return;}
+  var link=document.createElement('a');
+  link.download=filename+'.png';
+  link.href=canvas.toDataURL('image/png');
+  document.body.appendChild(link);link.click();document.body.removeChild(link);
+  if(!isPaid&&freeUsed>=FREE_IMAGES){document.getElementById('upsell').style.display='block';updateBar();}
+}
+</script>
+</body>
+</html>
